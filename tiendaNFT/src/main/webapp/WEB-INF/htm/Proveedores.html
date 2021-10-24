@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+<head>
+	<title>Proveedores</title>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+	<!-- jQuery Modal -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
+	<style>
+		.modal p { margin: 1em 0; }
+		
+		.add_form.modal {
+		  border-radius: 0;
+		  line-height: 18px;
+		  padding: 0;
+		  font-family: "Lucida Grande", Verdana, sans-serif;
+		}
+
+		.add_form.modal p { padding: 20px 30px; border-bottom: 1px solid #ddd; margin: 0;
+		  background: -webkit-gradient(linear,left bottom,left top,color-stop(0, #eee),color-stop(1, #fff));
+		  overflow: hidden;
+		}
+		.add_form.modal p:last-child { border: none; }
+		.add_form.modal p label { float: left; font-weight: bold; color: #333; font-size: 13px; width: 110px; line-height: 22px; }
+		.add_form.modal p input[type="text"],
+		.add_form.modal p input[type="submit"]		{
+		  font: normal 12px/18px "Lucida Grande", Verdana;
+		  padding: 3px;
+		  border: 1px solid #ddd;
+		  width: 200px;
+		}
+		
+		#msg {
+		  margin: 10px;
+		  padding: 30px;
+		  color: #fff;
+		  font-size: 18px;
+		  font-weight: bold;
+		  background: -moz-linear-gradient(top, #2e5764, #1e3d47);
+		  background: -webkit-gradient(linear,left bottom,left top,color-stop(0, #1e3d47),color-stop(1, #2e5764));
+		}
+	</style>
+
+	<script type="text/javascript">
+
+		$(document).ready(function() {
+			$.getJSON('http://localhost:8080/proveedoresList', function(json) {
+				var tr=[];
+				for (var i = 0; i < json.length; i++) {
+					tr.push('<tr>');
+					tr.push('<td>' + json[i].nitproveedor + '</td>');
+					tr.push('<td>' + json[i].ciudadProveedor + '</td>');
+                    tr.push('<td>' + json[i].direccionProveedor + '</td>');
+                    tr.push('<td>' + json[i].nombreProveedor + '</td>');
+                    tr.push('<td>' + json[i].telefonoProveedor + '</td>');
+          
+
+
+					tr.push('<td><button class=\'edit\'>Edit</button>&nbsp;&nbsp;<button class=\'delete\' nitproveedor=' + json[i].nitproveedor + '>Delete</button></td>');
+					tr.push('</tr>');
+				}
+				$('table').append($(tr.join('')));
+			});
+			
+			$(document).delegate('#addNew', 'click', function(event) {
+				event.preventDefault();
+				
+				var nitproveedor = $('#nitproveedor').val();
+				var ciudadProveedor = $('#direccionCliente').val();
+                var direccionProveedor = $('#emailCliente').val();
+                var nombreProveedor = $('#nombreCliente').val();
+                var telefonoProveedor = $('#telefonoCliente').val();
+
+				$.ajax({
+					type: "POST",
+					contentType: "application/json; charset=utf-8",
+					url: "http://localhost:8080/proveedores/save",
+					data: JSON.stringify({'nitproveedor': nitproveedor}),
+                    data: JSON.stringify({'ciudadProveedor': ciudadProveedor}),
+                    data: JSON.stringify({'direccionProveedor': direccionProveedor}),
+                    data: JSON.stringify({'nombreProveedor': nombreProveedor}),
+                    data: JSON.stringify({'telefonoProveedor': telefonoProveedor}),
+					cache: false,
+					success: function(result) {
+						$("#msg").html( "<span style='color: green'>Cliente agregado exitosamente</span>" );
+						window.setTimeout(function(){location.reload()},1000)
+					},
+					error: function(err) {
+						$("#msg").html( "<span style='color: red'>nitproveedor is required</span>" );
+                        $("#msg").html( "<span style='color: red'>ciudadProveedor is required</span>" );
+                        $("#msg").html( "<span style='color: red'>direccionProveedor is required</span>" );
+                        $("#msg").html( "<span style='color: red'>nombreProveedor is required</span>" );
+                        $("#msg").html( "<span style='color: red'>telefonoProveedor is required</span>" );
+					}
+				});
+			});
+			
+			$(document).delegate('.delete', 'click', function() { 
+				if (confirm('Confirma eliminar el registro?')) {
+					var nitproveedor = $(this).attr('nitproveedor');
+					var parent = $(this).parent().parent();
+					$.ajax({
+						type: "DELETE",
+						url: "http://localhost:8080/proveedores/delete/" + nitproveedor,
+						cache: false,
+						success: function() {
+							parent.fadeOut('slow', function() {
+								$(this).remove();
+							});
+							location.reload(true)
+						},
+						error: function() {
+							$('#err').html('<span style=\'color:red; font-weight: bold; font-size: 30px;\'>Error al eliminar registro').fadeIn().fadeOut(4000, function() {
+								$(this).remove();
+							});
+						}
+					});
+				}
+			});
+			
+			$(document).delegate('.edit', 'click', function() {
+				var parent = $(this).parent().parent();
+				
+				var nitproveedor = parent.children("td:nth-child(1)");
+				var ciudadProveedor = parent.children("td:nth-child(2)");
+                var direccionProveedor = parent.children("td:nth-child(3)");
+                var nombreProveedor = parent.children("td:nth-child(4)");
+                var telefonoProveedor = parent.children("td:nth-child(5)");
+				var buttons = parent.children("td:nth-child(6)");
+                
+				
+				ciudadProveedor.html("<input type='text' nitproveedor='txtName' value='" + ciudadProveedor.html() + "'/>");
+				direccionProveedor.html("<input type='text' nitproveedor='txtName' value='" + direccionProveedor.html() + "'/>");
+                nombreProveedor.html("<input type='text' nitproveedor='txtName' value='" + nombreProveedor.html() + "'/>");
+                telefonoProveedor.html("<input type='text' nitproveedor='txtName' value='" + telefonoProveedor.html() + "'/>");
+
+				buttons.html("<button id='save'>Save</button>&nbsp;&nbsp;<button class='delete' nitproveedor='" + nitproveedor.html() + "'>Delete</button>");
+			});
+			
+			$(document).delegate('#save', 'click', function() {
+				var parent = $(this).parent().parent();
+				
+				var nitproveedor = parent.children("td:nth-child(1)");
+				var ciudadProveedor = parent.children("td:nth-child(2)");
+                var direccionProveedor = parent.children("td:nth-child(3)");
+                var nombreProveedor = parent.children("td:nth-child(4)");
+                var telefonoProveedor = parent.children("td:nth-child(5)");
+				var buttons = parent.children("td:nth-child(6)");
+				
+				$.ajax({
+					type: "POST",
+					contentType: "application/json; charset=utf-8",
+					url: "http://localhost:8080/cliente/save",
+					data: JSON.stringify({'nitproveedor' : nitproveedor.html(), 
+                    'ciudadProveedor' : ciudadProveedor.children("input[type=text]").val(),
+                    'direccionProveedor' : direccionProveedor.children("input[type=text]").val(),
+					'nombreProveedor' : nombreProveedor.children("input[type=text]").val(),
+                    'telefonoProveedor' : telefonoProveedor.children("input[type=text]").val()}),
+					cache: false,
+					success: function() {
+						ciudadProveedor.html(ciudadProveedor.children("input[type=text]").val());
+                        direccionProveedor.html(direccionProveedor.children("input[type=text]").val());
+                        nombreProveedor.html(nombreProveedor.children("input[type=text]").val());
+                        telefonoProveedor.html(telefonoProveedor.children("input[type=text]").val());
+						buttons.html("<button class='edit' nitproveedor ='" + nitproveedor.html() + "'>Edit</button>&nbsp;&nbsp;<button class='delete' nitproveedor='" + nitproveedor.html() + "'>Delete</button>");
+					},
+					error: function() {
+						$('#err').html('<span style=\'color:red; font-weight: bold; font-size: 30px;\'>Error al actualizar el registro').fadeIn().fadeOut(4000, function() {
+							$(this).remove();
+						});
+					}
+				});
+			});
+
+		});
+	</script>
+</head>
+<body>
